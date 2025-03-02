@@ -86,4 +86,5 @@ npx @modelcontextprotocol/inspector --uri http://mcpserver.localhost/github/sse
   docker compose logs -f github-gateway
   ```
 - **SuperGateway issues**: Ensure the MCP server command is correct
-- **GitHub API issues**: Verify your GitHub token has the necessary permissions 
+- **GitHub API issues**: Verify your GitHub token has the necessary permissions
+- **Notion API issues**: Ensure your Notion token has access to the pages you're trying to interact with

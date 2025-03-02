@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   # Traefik - Edge Reverse Proxy
   traefik:
@@ -33,12 +31,6 @@ services:
       - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.entrypoints=traefik"
-      # Define CORS middleware
-      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,POST,OPTIONS"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=Content-Type,Origin,Accept"
-      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=*"
-      - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
-      - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
 
   # GitHub MCP Server with SuperGateway
   github-gateway:
@@ -53,9 +45,6 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
     networks:
       - mcp-network
-    ports:
-      - "9001:8000"  # Direct access on port 9001
-      - "9002:8000"  # Additional direct access on port 9002
     labels:
       - "traefik.enable=true"
       # GitHub MCP server configuration
@@ -63,8 +52,29 @@ services:
       - "traefik.http.routers.github.entrypoints=web"
       - "traefik.http.services.github.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.github-strip.stripprefix.prefixes=/github"
-      # Use the stripprefix middleware and CORS middleware
-      - "traefik.http.routers.github.middlewares=github-strip,cors"
+      - "traefik.http.routers.github.middlewares=github-strip"
+
+  # Notion MCP Server with SuperGateway
+  notion-gateway:
+    image: node:18
+    container_name: notion-gateway
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      sh -c "npm install -g supergateway && 
+             supergateway --port 8000 --baseUrl /notion --stdio 'npx -y @orbit-logistics/notion-mcp-server -t ${NOTION_API_TOKEN}'"
+    environment:
+      - NOTION_API_TOKEN=${NOTION_API_TOKEN}
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # Notion MCP server configuration
+      - "traefik.http.routers.notion.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/notion`)"
+      - "traefik.http.routers.notion.entrypoints=web"
+      - "traefik.http.services.notion.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.notion-strip.stripprefix.prefixes=/notion"
+      - "traefik.http.routers.notion.middlewares=notion-strip"
 
 networks:
   mcp-network:
