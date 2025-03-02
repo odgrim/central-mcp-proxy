@@ -1,0 +1,42 @@
+## Static configuration
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+api:
+  insecure: true
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+
+# Important timeout settings for SSE connections
+ping:
+  entryPoint: "web"
+  timeout: 5s
+
+# Configure timeouts for SSE connections
+respondingTimeouts:
+  idleTimeout: 300s
+  readTimeout: 300s
+  writeTimeout: 300s
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    watch: true
+    network: mcp-network
+  file:
+    directory: "/etc/traefik"
+    watch: true
+
+# Access logs
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+
+# Traefik logs
+log:
+  level: INFO 

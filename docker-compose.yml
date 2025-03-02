@@ -1,0 +1,71 @@
+version: '3'
+
+services:
+  # Traefik - Edge Reverse Proxy
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"  # Enable the dashboard but only on port 9080
+      - "--api.dashboard=true"  # Enable the dashboard
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik"
+      - "--entrypoints.web.address=:80"
+      # SSE Connections need long timeouts
+      - "--entrypoints.web.transport.respondingTimeouts.idleTimeout=300s"
+      - "--entrypoints.web.transport.respondingTimeouts.readTimeout=300s"
+      - "--entrypoints.web.transport.respondingTimeouts.writeTimeout=300s"
+      # Enable debug logging
+      - "--log.level=DEBUG"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard port mapped to same port
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/config:/etc/traefik/config"
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # Dashboard only on port 9080, not on the main domain
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.entrypoints=traefik"
+      # Define CORS middleware
+      - "traefik.http.middlewares.cors.headers.accessControlAllowMethods=GET,POST,OPTIONS"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowHeaders=Content-Type,Origin,Accept"
+      - "traefik.http.middlewares.cors.headers.accessControlAllowOriginList=*"
+      - "traefik.http.middlewares.cors.headers.accessControlMaxAge=100"
+      - "traefik.http.middlewares.cors.headers.addVaryHeader=true"
+
+  # GitHub MCP Server with SuperGateway
+  github-gateway:
+    image: node:18
+    container_name: github-gateway
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      sh -c "npm install -g supergateway && 
+             supergateway --port 8000 --baseUrl /github --stdio 'npx -y @modelcontextprotocol/server-github'"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - mcp-network
+    ports:
+      - "9001:8000"  # Direct access on port 9001
+      - "9002:8000"  # Additional direct access on port 9002
+    labels:
+      - "traefik.enable=true"
+      # GitHub MCP server configuration
+      - "traefik.http.routers.github.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/github`)"
+      - "traefik.http.routers.github.entrypoints=web"
+      - "traefik.http.services.github.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.github-strip.stripprefix.prefixes=/github"
+      # Use the stripprefix middleware and CORS middleware
+      - "traefik.http.routers.github.middlewares=github-strip,cors"
+
+networks:
+  mcp-network:
+    name: mcp-network 

@@ -1,0 +1,61 @@
+http:
+  routers:
+    web:
+      # api:
+      #   dashboard: false
+
+  middlewares:
+    
+    # SSE timeouts middleware
+    sseTimeouts:
+      buffering:
+        maxResponseBodyBytes: 0
+        memResponseBodyBytes: 0
+        maxRequestBodyBytes: 0
+        memRequestBodyBytes: 0
+        retryExpression: ""
+   
+    # Content Type middleware
+    contentType:
+      contentType:
+        autoDetect: true
+    
+    # CORS middleware for MCP servers
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Origin"
+          - "Accept"
+        accessControlAllowOriginList:
+          - "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+    
+    # Strip prefix middleware for Notion MCP server
+    notion-strip:
+      stripPrefix:
+        prefixes:
+          - "/notion"
+    
+    # Strip prefix middleware for GitHub MCP server
+    github-strip:
+      stripPrefix:
+        prefixes:
+          - "/github"
+    
+    # Strip prefix middleware for dashboard
+    dashboard-strip:
+      stripPrefix:
+        prefixes:
+          - "/dashboard"
+
+  # Add serversTransport configuration for ping timeout
+  serversTransports:
+    default:
+      forwardingTimeouts:
+        pingTimeout: 5s 
