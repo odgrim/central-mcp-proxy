@@ -1,9 +1,4 @@
 http:
-  routers:
-    web:
-      # api:
-      #   dashboard: false
-
   middlewares:
     
     # SSE timeouts middleware
@@ -48,6 +43,12 @@ http:
         prefixes:
           - "/github"
     
+    # Strip prefix middleware for memory bank
+    memory-bank-strip:
+      stripPrefix:
+        prefixes:
+          - "/memory-bank"
+
     # Strip prefix middleware for dashboard
     dashboard-strip:
       stripPrefix:

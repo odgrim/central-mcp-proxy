@@ -1,25 +1,27 @@
+# Each mcp server is going to be prefixed with a comment with the following:
+# Name of server, language, package path
+
 services:
-  # Traefik - Edge Reverse Proxy
+  # Traefik MCP proxy
   traefik:
     image: traefik:v3.3
     container_name: traefik
     restart: unless-stopped
     command:
-      - "--api.insecure=true"  # Enable the dashboard but only on port 9080
-      - "--api.dashboard=true"  # Enable the dashboard
+      # Base config + enable dashboard
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.file.directory=/etc/traefik"
       - "--entrypoints.web.address=:80"
-      # SSE Connections need long timeouts
-      - "--entrypoints.web.transport.respondingTimeouts.idleTimeout=300s"
-      - "--entrypoints.web.transport.respondingTimeouts.readTimeout=300s"
-      - "--entrypoints.web.transport.respondingTimeouts.writeTimeout=300s"
-      # Enable debug logging
-      - "--log.level=DEBUG"
+      # SSE Connections stay alive like websockets- set to infinity
+      - "--entrypoints.web.transport.respondingTimeouts.idleTimeout=0"
+      - "--entrypoints.web.transport.respondingTimeouts.readTimeout=0"
+      - "--entrypoints.web.transport.respondingTimeouts.writeTimeout=0"
     ports:
       - "80:80"
-      - "8080:8080"  # Dashboard port mapped to same port
+      - "8080:8080"  # Dashboard port
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik/config:/etc/traefik/config"
@@ -27,12 +29,12 @@ services:
       - mcp-network
     labels:
       - "traefik.enable=true"
-      # Dashboard only on port 9080, not on the main domain
+      # Dashboard only on port 8080, not on the main domain
       - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.entrypoints=traefik"
 
-  # GitHub MCP Server with SuperGateway
+  # GitHub, node, @modelcontextprotocol/server-github
   github-gateway:
     image: node:18
     container_name: github-gateway
@@ -47,14 +49,13 @@ services:
       - mcp-network
     labels:
       - "traefik.enable=true"
-      # GitHub MCP server configuration
       - "traefik.http.routers.github.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/github`)"
       - "traefik.http.routers.github.entrypoints=web"
       - "traefik.http.services.github.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.github-strip.stripprefix.prefixes=/github"
       - "traefik.http.routers.github.middlewares=github-strip"
 
-  # Notion MCP Server with SuperGateway
+  # Notion, node @orbit-logistics/notion-mcp-server
   notion-gateway:
     image: node:18
     container_name: notion-gateway
@@ -74,7 +75,33 @@ services:
       - "traefik.http.routers.notion.entrypoints=web"
       - "traefik.http.services.notion.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.notion-strip.stripprefix.prefixes=/notion"
+
       - "traefik.http.routers.notion.middlewares=notion-strip"
+
+  # Memory bank, node, @allpepper/memory-bank-mcp
+  memory-bank-gateway:
+    image: node:18
+    container_name: memory-bank
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - /Users/odgrim/.cursor/bank:/bank:rw
+    command: >
+      sh -c "npm install -g supergateway &&
+             supergateway --port 8000 --baseUrl /memory-bank --stdio 'npx -y @allpepper/memory-bank-mcp'"
+    environment:
+      - MEMORY_BANK_ROOT=/bank
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # memory-bank MCP server configuration
+      - "traefik.http.routers.memory-bank.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/memory-bank`)"
+      - "traefik.http.routers.memory-bank.entrypoints=web"
+      - "traefik.http.services.memory-bank.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.memory-bank-strip.stripprefix.prefixes=/memory-bank"
+      - "traefik.http.routers.memory-bank.middlewares=memory-bank-strip"
+
 
 networks:
   mcp-network:
