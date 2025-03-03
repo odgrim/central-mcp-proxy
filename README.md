@@ -1,21 +1,24 @@
 # Central MCP Host
 
-This project provides a centralized hosting environment for Model Context Protocol (MCP) servers using Docker, Traefik v3.3, and SuperGateway.
+This project provides a centralized hosting environment for Model Context Protocol (MCP) servers using Docker, Traefik, and SuperGateway.
 
 ## Overview
 
-This setup runs a Traefik v3.3 reverse proxy to route requests to various MCP servers. SuperGateway is used to convert between stdio and SSE transports, allowing the MCP servers to communicate with clients using SSE.
+This setup runs a Traefik reverse proxy to route requests to various MCP servers. SuperGateway is used to convert between stdio and SSE transports, allowing the MCP servers to communicate with clients using SSE.
 
 ## MCP Servers Included
 
-- **Notion MCP Server**: Interact with Notion databases and pages
-- **GitHub MCP Server**: Interact with GitHub repositories, issues, and pull requests
+- **Notion**: Interact with Notion databases and pages
+- **Linear**: Interact with Linear Tickets
+- **GitHub**: Interact with GitHub repositories, issues, and pull requests
+- **Memory Bank**: Tools for recording project notes, thought trails and learnings
 
 ## Prerequisites
 
 - Docker and Docker Compose
-- Notion API token (for Notion MCP server)
-- GitHub API token (for GitHub MCP server)
+- Notion API token
+- Linear API token
+- GitHub API token
 
 ## Setup
 
@@ -43,7 +46,12 @@ Once running, you can access the services using each tool's respective path-base
 - **GitHub MCP Server**: 
   - SSE Endpoint: http://$HOSTNAME/github/sse
   - Message Endpoint: http://$HOSTNAME/github/message
-
+- **Linear MCP Server**: 
+  - SSE Endpoint: http://$HOSTNAME/linear/sse
+  - Message Endpoint: http://$HOSTNAME/linear/message
+- **Memory-bank MCP Server**: 
+  - SSE Endpoint: http://$HOSTNAME/memory-bank/sse
+  - Message Endpoint: http://$HOSTNAME/memory-bank/message
 
 ## How It Works
 
@@ -61,7 +69,7 @@ Traefik is configured to:
 
 1. Route requests based on path prefix e.g. (`/notion`, `/github`, `/dashboard`)
 2. Strip the path prefix before forwarding to the appropriate service
-3. Set appropriate timeouts for SSE connections (300s)
+3. Set appropriate make sure connections don't die
 4. Provide a dashboard for monitoring
 
 ## Testing the Setup
@@ -69,22 +77,15 @@ Traefik is configured to:
 To test the setup, you can use the MCP Inspector:
 
 ```bash
-# For Notion MCP server
-npx @modelcontextprotocol/inspector --uri http://mcpserver.localhost/notion/sse
-
-# For GitHub MCP server
-npx @modelcontextprotocol/inspector --uri http://mcpserver.localhost/github/sse
+npx @modelcontextprotocol/inspector node build/index.js
 ```
 
 ## Troubleshooting
 
-- **Connection timeouts**: Check the Traefik timeout settings in the configuration
-- **Path routing issues**: Verify the path prefixes and strip middleware configuration
+- **Path routing issues**: Verify the path prefixes in traefik labels, SuperGateway baseUrl option and strip middleware configuration
 - **MCP server errors**: Check the logs of the container:
   ```bash
   docker compose logs -f notion-gateway
   docker compose logs -f github-gateway
   ```
-- **SuperGateway issues**: Ensure the MCP server command is correct
-- **GitHub API issues**: Verify your GitHub token has the necessary permissions
-- **Notion API issues**: Ensure your Notion token has access to the pages you're trying to interact with
+- **SuperGateway issues**: Ensure the MCP server command is correct and the package exists in node registry- some packages advertise under different names in mcp vs node registries.
