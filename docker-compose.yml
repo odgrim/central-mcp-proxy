@@ -90,7 +90,7 @@ services:
       sh -c "npm install -g supergateway &&
              supergateway --port 8000 --baseUrl /memory-bank --stdio 'npx -y @allpepper/memory-bank-mcp'"
     environment:
-      - MEMORY_BANK_ROOT=/bank
+      - MEMORY_BANK_ROOT=${MEMORY_BANK_ROOT}
     networks:
       - mcp-network
     labels:
