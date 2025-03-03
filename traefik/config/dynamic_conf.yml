@@ -49,6 +49,12 @@ http:
         prefixes:
           - "/memory-bank"
 
+    # Strip prefix middleware for linear
+    linear-strip:
+      stripPrefix:
+        prefixes:
+          - "/linear"
+
     # Strip prefix middleware for dashboard
     dashboard-strip:
       stripPrefix:

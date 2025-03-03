@@ -85,7 +85,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     volumes:
-      - /Users/odgrim/.cursor/bank:/bank:rw
+      - ${MEMORY_BANK_ROOT}:/bank:rw
     command: >
       sh -c "npm install -g supergateway &&
              supergateway --port 8000 --baseUrl /memory-bank --stdio 'npx -y @allpepper/memory-bank-mcp'"
@@ -101,6 +101,29 @@ services:
       - "traefik.http.services.memory-bank.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.memory-bank-strip.stripprefix.prefixes=/memory-bank"
       - "traefik.http.routers.memory-bank.middlewares=memory-bank-strip"
+
+  # Linear, node, smithery@tiovikram/linear-mcp
+  linear-gateway:
+    image: node:18
+    container_name: linear-gateway
+    restart: unless-stopped
+    working_dir: /app
+    command: /app/entrypoint.sh
+    volumes:
+      - ./scripts/linear-entrypoint.sh:/app/entrypoint.sh:rx
+    environment:
+      - LINEAR_ACCESS_TOKEN=${LINEAR_API_KEY}
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # linear MCP server configuration
+      - "traefik.http.routers.linear.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/linear`)"
+      - "traefik.http.routers.linear.entrypoints=web"
+      - "traefik.http.services.linear.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.linear-strip.stripprefix.prefixes=/linear"
+      - "traefik.http.routers.linear.middlewares=linear-strip"
+
 
 
 networks:
