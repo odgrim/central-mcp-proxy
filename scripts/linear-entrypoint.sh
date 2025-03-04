@@ -11,7 +11,10 @@ fi
 if [ ! -d "/app/linear-mcp" ]; then
     echo "Cloning linear-mcp repository..."
     cd /app
-    git clone https://github.com/cline/linear-mcp.git
+    #git clone https://github.com/cline/linear-mcp.git
+    git clone https://github.com/odgrim/linear-mcp.git
+    cd linear-mcp
+    git checkout add-api-key-auth
 fi
 
 # Install and build linear-mcp
