@@ -1,0 +1,26 @@
+services:
+  # GitHub, node, @modelcontextprotocol/server-github
+  github-gateway:
+    image: node:18
+    container_name: github-gateway
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      sh -c "npm install -g supergateway && 
+             supergateway --port 8000 --baseUrl /github --stdio 'npx -y @modelcontextprotocol/server-github'"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.github.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/github`)"
+      - "traefik.http.routers.github.entrypoints=web"
+      - "traefik.http.services.github.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.github-strip.stripprefix.prefixes=/github"
+      - "traefik.http.routers.github.middlewares=github-strip"
+    profiles:
+      - github
+      - all
+
+# Networks are defined in the main docker-compose.yml file 

@@ -33,6 +33,32 @@ This setup runs a Traefik reverse proxy to route requests to various MCP servers
    docker compose up -d
    ```
 
+## Docker Compose Structure
+
+The project uses a modular Docker Compose structure:
+
+- `docker-compose.yml`: Main file that includes Traefik configuration and references to service-specific files
+- `docker-compose/github.yml`: GitHub MCP server configuration
+- `docker-compose/notion.yml`: Notion MCP server configuration
+- `docker-compose/memory-bank.yml`: Memory Bank MCP server configuration
+- `docker-compose/linear.yml`: Linear MCP server configuration
+
+This modular approach allows you to:
+- Start all services: `docker compose up -d` (uses the default `all` profile set in `.env`)
+- Start specific services using profiles: 
+  - GitHub only: `docker compose --profile github up -d`
+  - Notion only: `docker compose --profile notion up -d`
+  - Memory Bank only: `docker compose --profile memory-bank up -d`
+  - Linear only: `docker compose --profile linear up -d`
+  - All services explicitly: `docker compose --profile all up -d`
+- Add new services easily by creating a new file in the `docker-compose` directory
+
+> **Note:** This project follows modern Docker Compose practices by omitting the `version` key, which is no longer required in Docker Compose V2 and above.
+
+> **Note:** The network configuration is defined only in the main `docker-compose.yml` file to avoid conflicts. All services reference this network but don't redefine it.
+
+> **Note:** The default profile is set to `all` in the `.env` file using the `COMPOSE_PROFILES` environment variable, allowing you to run `docker compose up` without explicitly specifying a profile.
+
 ## Accessing the Services
 
 Once running, you can access the services using each tool's respective path-based route

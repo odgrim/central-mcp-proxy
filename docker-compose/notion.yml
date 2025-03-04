@@ -1,0 +1,27 @@
+services:
+  # Notion, node @orbit-logistics/notion-mcp-server
+  notion-gateway:
+    image: node:18
+    container_name: notion-gateway
+    restart: unless-stopped
+    working_dir: /app
+    command: >
+      sh -c "npm install -g supergateway && 
+             supergateway --port 8000 --baseUrl /notion --stdio 'npx -y @orbit-logistics/notion-mcp-server -t ${NOTION_API_TOKEN}'"
+    environment:
+      - NOTION_API_TOKEN=${NOTION_API_TOKEN}
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # Notion MCP server configuration
+      - "traefik.http.routers.notion.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/notion`)"
+      - "traefik.http.routers.notion.entrypoints=web"
+      - "traefik.http.services.notion.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.notion-strip.stripprefix.prefixes=/notion"
+      - "traefik.http.routers.notion.middlewares=notion-strip"
+    profiles:
+      - notion
+      - all
+
+# Networks are defined in the main docker-compose.yml file 

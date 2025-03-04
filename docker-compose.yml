@@ -33,99 +33,20 @@ services:
       - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.entrypoints=traefik"
-
-  # GitHub, node, @modelcontextprotocol/server-github
-  github-gateway:
-    image: node:18
-    container_name: github-gateway
-    restart: unless-stopped
-    working_dir: /app
-    command: >
-      sh -c "npm install -g supergateway && 
-             supergateway --port 8000 --baseUrl /github --stdio 'npx -y @modelcontextprotocol/server-github'"
-    environment:
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-    networks:
-      - mcp-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.github.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/github`)"
-      - "traefik.http.routers.github.entrypoints=web"
-      - "traefik.http.services.github.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.github-strip.stripprefix.prefixes=/github"
-      - "traefik.http.routers.github.middlewares=github-strip"
-
-  # Notion, node @orbit-logistics/notion-mcp-server
-  notion-gateway:
-    image: node:18
-    container_name: notion-gateway
-    restart: unless-stopped
-    working_dir: /app
-    command: >
-      sh -c "npm install -g supergateway && 
-             supergateway --port 8000 --baseUrl /notion --stdio 'npx -y @orbit-logistics/notion-mcp-server -t ${NOTION_API_TOKEN}'"
-    environment:
-      - NOTION_API_TOKEN=${NOTION_API_TOKEN}
-    networks:
-      - mcp-network
-    labels:
-      - "traefik.enable=true"
-      # Notion MCP server configuration
-      - "traefik.http.routers.notion.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/notion`)"
-      - "traefik.http.routers.notion.entrypoints=web"
-      - "traefik.http.services.notion.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.notion-strip.stripprefix.prefixes=/notion"
-
-      - "traefik.http.routers.notion.middlewares=notion-strip"
-
-  # Memory bank, node, @allpepper/memory-bank-mcp
-  memory-bank-gateway:
-    image: node:18
-    container_name: memory-bank
-    restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ${MEMORY_BANK_ROOT}:/bank:rw
-    command: >
-      sh -c "npm install -g supergateway &&
-             supergateway --port 8000 --baseUrl /memory-bank --stdio 'npx -y @allpepper/memory-bank-mcp'"
-    environment:
-      - MEMORY_BANK_ROOT=${MEMORY_BANK_ROOT}
-    networks:
-      - mcp-network
-    labels:
-      - "traefik.enable=true"
-      # memory-bank MCP server configuration
-      - "traefik.http.routers.memory-bank.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/memory-bank`)"
-      - "traefik.http.routers.memory-bank.entrypoints=web"
-      - "traefik.http.services.memory-bank.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.memory-bank-strip.stripprefix.prefixes=/memory-bank"
-      - "traefik.http.routers.memory-bank.middlewares=memory-bank-strip"
-
-  # Linear, node, smithery@tiovikram/linear-mcp
-  linear-gateway:
-    image: node:18
-    container_name: linear-gateway
-    restart: unless-stopped
-    working_dir: /app
-    command: /app/entrypoint.sh
-    volumes:
-      - ./scripts/linear-entrypoint.sh:/app/entrypoint.sh:rx
-    environment:
-      - LINEAR_ACCESS_TOKEN=${LINEAR_API_KEY}
-    networks:
-      - mcp-network
-    labels:
-      - "traefik.enable=true"
-      # linear MCP server configuration
-      - "traefik.http.routers.linear.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/linear`)"
-      - "traefik.http.routers.linear.entrypoints=web"
-      - "traefik.http.services.linear.loadbalancer.server.port=8000"
-      - "traefik.http.middlewares.linear-strip.stripprefix.prefixes=/linear"
-      - "traefik.http.routers.linear.middlewares=linear-strip"
-
-
+    profiles:
+      - github
+      - notion
+      - memory-bank
+      - linear
+      - all
 
 networks:
   mcp-network:
-    name: mcp-network 
+    name: mcp-network
+
+# Include service-specific compose files
+include:
+  - docker-compose/github.yml
+  - docker-compose/notion.yml
+  - docker-compose/memory-bank.yml
+  - docker-compose/linear.yml 
