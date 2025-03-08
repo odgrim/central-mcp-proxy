@@ -4,8 +4,8 @@
   "description": "This project provides a centralized hosting environment for Model Context Protocol (MCP) servers using Docker, Traefik v3.3, and SuperGateway.",
   "main": "test-github-mcp.js",
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "odgrim",
+  "license": "MPL-2",
   "dependencies": {
     "eventsource": "^3.0.5",
     "node-fetch": "^2.7.0"

@@ -1,0 +1,25 @@
+services:
+  # Memory bank, node, @allpepper/memory-bank-mcp
+  memory-bank-gateway:
+    image: node:18
+    container_name: memory-bank
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ${MEMORY_BANK_ROOT}:/bank:rw
+    command: >
+      sh -c "npx -y @odgrim/mcp-fetch --sse --port 8000 --prefix=fetch"
+    networks:
+      - mcp-network
+    labels:
+      - "traefik.enable=true"
+      # memory-bank MCP server configuration
+      - "traefik.http.routers.memory-bank.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/fetch`)"
+      - "traefik.http.routers.memory-bank.entrypoints=web"
+      - "traefik.http.services.memory-bank.loadbalancer.server.port=8000"
+      - "traefik.http.routers.memory-bank.middlewares=memory-bank-strip"
+    profiles:
+      - memory-bank
+      - all
+
+# Networks are defined in the main docker-compose.yml file 

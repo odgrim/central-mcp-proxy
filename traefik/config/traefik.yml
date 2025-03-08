@@ -18,9 +18,9 @@ ping:
 
 # Configure timeouts for SSE connections
 respondingTimeouts:
-  idleTimeout: 0
-  readTimeout: 0
-  writeTimeout: 0
+  idleTimeout: 86400
+  readTimeout: 86400
+  writeTimeout: 86400
 
 providers:
   docker:

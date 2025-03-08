@@ -50,3 +50,4 @@ include:
   - docker-compose/notion.yml
   - docker-compose/memory-bank.yml
   - docker-compose/linear.yml 
+  - docker-compose/fetch.yml
