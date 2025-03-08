@@ -11,13 +11,12 @@ services:
       - mcp-network
     labels:
       - "traefik.enable=true"
-      # memory-bank MCP server configuration
-      - "traefik.http.routers.memory-bank.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/fetch`)"
-      - "traefik.http.routers.memory-bank.entrypoints=web"
-      - "traefik.http.services.memory-bank.loadbalancer.server.port=8000"
-      - "traefik.http.routers.memory-bank.middlewares=memory-bank-strip"
+      # fetch MCP server configuration
+      - "traefik.http.routers.fetch.rule=Host(`${MCP_HOST:-mcpserver.localhost}`) && PathPrefix(`/fetch`)"
+      - "traefik.http.routers.fetch.entrypoints=web"
+      - "traefik.http.services.fetch.loadbalancer.server.port=8000"
     profiles:
-      - memory-bank
+      - fetch
       - all
 
 # Networks are defined in the main docker-compose.yml file 
