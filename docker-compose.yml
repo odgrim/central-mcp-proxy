@@ -38,6 +38,7 @@ services:
       - notion
       - memory-bank
       - linear
+      - fetch
       - all
 
 networks:
