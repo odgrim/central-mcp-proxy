@@ -1,12 +1,10 @@
 services:
-  # Memory bank, node, @allpepper/memory-bank-mcp
-  memory-bank-gateway:
+  # mcp-fetch, node, @odgrim/mcp-fetch
+  fetch-gateway:
     image: node:18
-    container_name: memory-bank
+    container_name: fetch
     restart: unless-stopped
     working_dir: /app
-    volumes:
-      - ${MEMORY_BANK_ROOT}:/bank:rw
     command: >
       sh -c "npx -y @odgrim/mcp-fetch --sse --port 8000 --prefix=fetch"
     networks:
