@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     command: >
-      sh -c "npx -y @odgrim/mcp-fetch --sse --port 8000 --prefix=fetch"
+      sh -c "npx -y @odgrim/mcp-fetch --sse --port=8000 --prefix=fetch"
     networks:
       - mcp-network
     labels:
