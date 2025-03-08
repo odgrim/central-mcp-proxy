@@ -2,7 +2,7 @@ services:
   # mcp-fetch, node, @odgrim/mcp-fetch
   fetch-gateway:
     image: node:18
-    container_name: fetch
+    container_name: fetch-gateway
     restart: unless-stopped
     working_dir: /app
     command: >
