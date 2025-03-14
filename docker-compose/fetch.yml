@@ -1,7 +1,9 @@
 services:
   # mcp-fetch, node, @odgrim/mcp-fetch
   fetch-gateway:
-    image: node:18
+    build:
+      context: ..
+      dockerfile: dockerfiles/fetch.Dockerfile
     container_name: fetch-gateway
     restart: unless-stopped
     working_dir: /app
